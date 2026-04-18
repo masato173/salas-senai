@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controle de Salas · SENAI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0b0f1a;--surface:#111827;--surface2:#1a2235;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
+  --accent:#00d4ff;--accent2:#0099cc;--green:#00e5a0;
+  --amber:#ffc947;--red:#ff5c7a;--text:#e8edf5;--muted:#7a8ba8;--muted2:#4a5d75;
+  --font:"Space Grotesk",sans-serif;--mono:"JetBrains Mono",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%;scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");opacity:.4}
+.blob{position:fixed;pointer-events:none;border-radius:50%;filter:blur(100px);opacity:.12;z-index:0}
+.blob1{width:600px;height:600px;top:-200px;left:-100px;background:radial-gradient(circle,#00d4ff,transparent 70%)}
+.blob2{width:500px;height:500px;bottom:-150px;right:-100px;background:radial-gradient(circle,#0060aa,transparent 70%)}
+.app{position:relative;z-index:1;max-width:1500px;margin:0 auto;padding:32px 24px 60px}
+.header{display:flex;align-items:center;justify-content:space-between;
+  padding:28px 36px;border-radius:24px;
+  background:linear-gradient(135deg,rgba(0,212,255,.08),rgba(0,100,200,.06));
+  border:1px solid rgba(0,212,255,.15);margin-bottom:28px;backdrop-filter:blur(20px);gap:20px;flex-wrap:wrap}
+.header-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;
+  background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.2);
+  font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+.badge-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.header h1{font-size:clamp(24px,3.5vw,38px);font-weight:700;letter-spacing:-.03em;color:#fff;line-height:1.1}
+.header h1 span{color:var(--accent)}
+.header-right{text-align:right}
+.header-date{font-size:13px;color:var(--muted);line-height:1.8}
+.header-date strong{color:var(--text);font-weight:600}
+/* status bar */
+.status-bar{
+  display:flex;align-items:center;gap:12px;padding:12px 20px;border-radius:14px;
+  background:var(--surface);border:1px solid var(--border);margin-bottom:20px;
+  font-size:13px;font-weight:500;
+}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.status-dot.ok{background:var(--green);box-shadow:0 0 8px rgba(0,229,160,.5)}
+.status-dot.loading{background:var(--amber);animation:pulse 1s infinite}
+.status-dot.error{background:var(--red)}
+.status-text{color:var(--muted);flex:1}
+.status-text strong{color:var(--text)}
+.btn-refresh{padding:6px 14px;border-radius:10px;border:1px solid var(--border2);
+  background:rgba(255,255,255,.05);color:var(--text);font-family:var(--font);font-size:12px;
+  font-weight:600;cursor:pointer;transition:.2s;margin-left:auto}
+.btn-refresh:hover{background:rgba(255,255,255,.1)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:24px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:18px 20px;transition:.2s}
+.stat:hover{border-color:var(--border2);transform:translateY(-2px)}
+.stat-label{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.stat-val{font-size:28px;font-weight:700;color:#fff;line-height:1}
+.stat-sub{font-size:12px;color:var(--muted);margin-top:4px}
+.stat.accent .stat-val{color:var(--accent)}
+.stat.green .stat-val{color:var(--green)}
+.stat.amber .stat-val{color:var(--amber)}
+.search-panel{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:22px;margin-bottom:24px}
+.search-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+.field{display:flex;flex-direction:column;gap:7px;flex:1;min-width:180px}
+.field label{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.field input,.field select{
+  padding:13px 16px;border-radius:14px;border:1px solid var(--border2);
+  background:rgba(255,255,255,.04);color:var(--text);font-family:var(--font);font-size:14px;outline:none;transition:.2s}
+.field input:focus,.field select:focus{border-color:rgba(0,212,255,.5);box-shadow:0 0 0 3px rgba(0,212,255,.1)}
+.field input::placeholder{color:var(--muted2)}
+.field select option{background:var(--surface);color:var(--text)}
+.btn{padding:13px 22px;border-radius:14px;border:none;cursor:pointer;font-family:var(--font);font-size:14px;font-weight:600;transition:.2s;white-space:nowrap}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#000}
+.btn-primary:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn-secondary{background:rgba(255,255,255,.06);color:var(--text);border:1px solid var(--border2)}
+.btn-secondary:hover{background:rgba(255,255,255,.1)}
+.btn-today{background:rgba(0,229,160,.1);color:var(--green);border:1px solid rgba(0,229,160,.2)}
+.btn-today:hover{background:rgba(0,229,160,.18)}
+.table-header{display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px;background:var(--surface);border:1px solid var(--border);
+  border-radius:14px 14px 0 0;border-bottom:none;gap:12px;flex-wrap:wrap}
+.table-header-title{font-size:14px;font-weight:700;color:var(--text)}
+.table-count{padding:4px 12px;border-radius:20px;
+  background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.15);font-size:12px;font-weight:700;color:var(--accent)}
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:0 0 14px 14px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+thead tr{background:var(--surface2)}
+th{padding:14px 16px;text-align:left;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tbody tr{transition:.15s}
+tbody tr:hover{background:rgba(255,255,255,.03)}
+.cell-date{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--muted);white-space:nowrap}
+.cell-date .weekday{display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+.cell-turma{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.turma-badge{display:inline-block;padding:3px 10px;border-radius:8px;font-size:12px;font-weight:700;background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.15);color:var(--accent)}
+.cell-sala{font-size:13px;font-weight:600;color:var(--text)}
+.sala-type{display:inline-block;padding:3px 10px;border-radius:8px;font-size:11px;font-weight:700;margin-left:6px}
+.sala-type.lab{background:rgba(255,201,71,.08);color:var(--amber);border:1px solid rgba(255,201,71,.15)}
+.sala-type.sala{background:rgba(0,229,160,.08);color:var(--green);border:1px solid rgba(0,229,160,.15)}
+.empty{padding:80px 24px;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:14px}
+.empty-icon{font-size:52px;margin-bottom:16px;opacity:.5}
+.empty-title{font-size:18px;font-weight:700;color:var(--text);margin-bottom:6px}
+.empty-sub{font-size:14px;color:var(--muted)}
+.pagination{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;flex-wrap:wrap;gap:12px;margin-top:14px}
+.page-info{font-size:13px;color:var(--muted)}
+.page-btns{display:flex;gap:6px;flex-wrap:wrap}
+.page-btn{min-width:36px;height:36px;padding:0 12px;border-radius:10px;border:1px solid var(--border2);
+  background:var(--surface);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:.15s}
+.page-btn:hover:not(:disabled){background:rgba(255,255,255,.08)}
+.page-btn.active{background:rgba(0,212,255,.15);border-color:rgba(0,212,255,.35);color:var(--accent)}
+.page-btn:disabled{opacity:.3;cursor:not-allowed}
+.toast{position:fixed;bottom:24px;right:24px;z-index:999;padding:14px 20px;border-radius:14px;font-size:14px;font-weight:600;transform:translateY(80px);opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);pointer-events:none;display:flex;align-items:center;gap:8px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{background:rgba(0,229,160,.15);border:1px solid rgba(0,229,160,.3);color:var(--green)}
+.toast.error{background:rgba(255,92,122,.12);border:1px solid rgba(255,92,122,.25);color:var(--red)}
+.skeleton{background:linear-gradient(90deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.04) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:8px;height:44px;margin-bottom:8px}
+@keyframes shimmer{to{background-position:-200% 0}}
+@media(max-width:680px){
+  .app{padding:16px 12px 48px}.header{padding:20px;flex-direction:column;align-items:flex-start}
+  .header-right{text-align:left}.search-row{flex-direction:column}.field{min-width:100%}.btn{width:100%}
+  th,td{padding:10px 12px}.stats{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+<div class="blob blob1"></div>
+<div class="blob blob2"></div>
+<div class="app">
+
+  <header class="header">
+    <div class="header-left">
+      <div class="header-badge"><span class="badge-dot"></span> Sistema Ativo</div>
+      <h1>Controle de <span>Salas</span></h1>
+      <div style="font-size:14px;color:var(--muted);margin-top:6px">SENAI · Consulta de turmas e disponibilidade de salas</div>
+    </div>
+    <div class="header-right">
+      <div class="header-date">Data atual<br><strong id="dataAtual">—</strong></div>
+    </div>
+  </header>
+
+  <!-- STATUS BAR -->
+  <div class="status-bar" id="statusBar">
+    <span class="status-dot loading" id="statusDot"></span>
+    <span class="status-text" id="statusText">Carregando dados da planilha...</span>
+    <button class="btn-refresh" onclick="carregarDados()">↻ Atualizar</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat accent"><div class="stat-label">Total de registros</div><div class="stat-val" id="statTotal">—</div><div class="stat-sub">na planilha</div></div>
+    <div class="stat green"><div class="stat-label">Filtrados</div><div class="stat-val" id="statFiltrados">—</div><div class="stat-sub">resultados</div></div>
+    <div class="stat"><div class="stat-label">Turmas únicas</div><div class="stat-val" id="statTurmas">—</div><div class="stat-sub">na seleção</div></div>
+    <div class="stat amber"><div class="stat-label">Salas usadas</div><div class="stat-val" id="statSalas">—</div><div class="stat-sub">na seleção</div></div>
+  </div>
+
+  <div class="search-panel">
+    <div class="search-row">
+      <div class="field" style="flex:2">
+        <label>🔍 Buscar por turma</label>
+        <input type="text" id="inputTurma" placeholder="ex: APB.ADM.119 ou ADM..." oninput="filtrar()">
+      </div>
+      <div class="field" style="flex:1.2">
+        <label>📅 Buscar por data</label>
+        <input type="date" id="inputData" onchange="filtrar()">
+      </div>
+      <div class="field" style="flex:1.2">
+        <label>🏢 Sala</label>
+        <select id="selectSala" onchange="filtrar()"><option value="">Todas as salas</option></select>
+      </div>
+      <div class="field" style="flex:1">
+        <label>📆 Mês</label>
+        <select id="selectMes" onchange="filtrar()"><option value="">Todos os meses</option></select>
+      </div>
+      <button class="btn btn-today" onclick="hojeClick()">Hoje</button>
+      <button class="btn btn-secondary" onclick="limpar()">Limpar</button>
+    </div>
+  </div>
+
+  <div id="tabelaContainer">
+    <div class="skeleton"></div><div class="skeleton" style="opacity:.7"></div><div class="skeleton" style="opacity:.4"></div>
+  </div>
+  <div class="pagination" id="paginacao" style="display:none">
+    <div class="page-info" id="pageInfo"></div>
+    <div class="page-btns" id="pageBtns"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── CONFIG ─── Altere estas duas linhas com os seus valores ───
+const API_URL   = 'https://script.google.com/macros/s/AKfycbzNNe-q-xF2PvC-yrO0CA26yPlSEJxN0OATbtQLWUixro-kZXS_HaK-PhtvpRMQ1XM8/exec';
+const API_TOKEN = 'senai@2026';
+// ──────────────────────────────────────────────────────────────
+
+let dados = [], filtrados = [], paginaAtual = 1;
+const POR_PAGINA = 30;
+const DIAS = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("dataAtual").textContent =
+    new Date().toLocaleDateString("pt-BR", {weekday:"long",year:"numeric",month:"long",day:"numeric"});
+  carregarDados();
+});
+
+async function carregarDados() {
+  setStatus("loading", "Carregando dados da planilha...");
+  document.getElementById("tabelaContainer").innerHTML =
+    '<div class="skeleton"></div><div class="skeleton" style="opacity:.7"></div><div class="skeleton" style="opacity:.4"></div>';
+  try {
+    const url = `${API_URL}?token=${encodeURIComponent(API_TOKEN)}`;
+    const res  = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    if (json.error) throw new Error(json.error);
+    dados = json.dados || [];
+    setStatus("ok", `<strong>${dados.length.toLocaleString("pt-BR")} registros</strong> carregados · última atualização: ${new Date().toLocaleTimeString("pt-BR")}`);
+    popularFiltros();
+    filtrar();
+    showToast("✅ Dados atualizados!", "success");
+  } catch(err) {
+    setStatus("error", "Erro ao carregar: " + err.message);
+    document.getElementById("tabelaContainer").innerHTML =
+      `<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-title">Erro ao carregar dados</div><div class="empty-sub">${err.message}<br><br>Verifique se a URL e o token estão corretos no arquivo HTML.</div></div>`;
+    showToast("❌ " + err.message, "error");
+  }
+}
+
+function setStatus(type, html) {
+  const dot  = document.getElementById("statusDot");
+  const text = document.getElementById("statusText");
+  dot.className = "status-dot " + type;
+  text.innerHTML = html;
+}
+
+function popularFiltros() {
+  const salas = [...new Set(dados.map(r=>r.sala))].sort((a,b)=>{
+    const na=parseInt(a)||9999, nb=parseInt(b)||9999;
+    return na-nb||a.localeCompare(b);
+  });
+  const meses = [...new Set(dados.map(r=>r.mes))];
+  const ss=document.getElementById("selectSala"), sm=document.getElementById("selectMes");
+  ss.innerHTML="<option value=''>Todas as salas</option>";
+  sm.innerHTML="<option value=''>Todos os meses</option>";
+  salas.forEach(s=>{const o=document.createElement("option");o.value=s;o.textContent=s;ss.appendChild(o)});
+  meses.forEach(m=>{const o=document.createElement("option");o.value=m;o.textContent=m;sm.appendChild(o)});
+}
+
+function filtrar() {
+  const turma = document.getElementById("inputTurma").value.trim().toUpperCase();
+  const data  = document.getElementById("inputData").value;
+  const sala  = document.getElementById("selectSala").value;
+  const mes   = document.getElementById("selectMes").value;
+
+  filtrados = dados.filter(r=>{
+    if(turma && !r.turma.toUpperCase().includes(turma)) return false;
+    if(data  && r.data  !== data)  return false;
+    if(sala  && r.sala  !== sala)  return false;
+    if(mes   && r.mes   !== mes)   return false;
+    return true;
+  }).sort((a,b)=>a.data.localeCompare(b.data)||a.sala.localeCompare(b.sala));
+
+  paginaAtual=1;
+  document.getElementById("statTotal").textContent      = dados.length.toLocaleString("pt-BR");
+  document.getElementById("statFiltrados").textContent  = filtrados.length.toLocaleString("pt-BR");
+  document.getElementById("statTurmas").textContent     = new Set(filtrados.map(r=>r.turma)).size;
+  document.getElementById("statSalas").textContent      = new Set(filtrados.map(r=>r.sala)).size;
+  renderizar();
+}
+
+function renderizar() {
+  const container = document.getElementById("tabelaContainer");
+  const pag = document.getElementById("paginacao");
+  if(!filtrados.length){
+    container.innerHTML=`<div class="empty"><div class="empty-icon">🔍</div><div class="empty-title">Nenhum resultado encontrado</div><div class="empty-sub">Tente ajustar os filtros</div></div>`;
+    pag.style.display="none"; return;
+  }
+  const total = Math.ceil(filtrados.length/POR_PAGINA);
+  const ini   = (paginaAtual-1)*POR_PAGINA;
+  const fatia = filtrados.slice(ini, ini+POR_PAGINA);
+  const hoje  = new Date().toISOString().split("T")[0];
+  let rows="";
+  fatia.forEach(r=>{
+    const d=new Date(r.data+"T12:00:00");
+    const fmt=d.toLocaleDateString("pt-BR");
+    const dia=DIAS[d.getDay()];
+    const eHoje=r.data===hoje;
+    const isLab=r.sala.toLowerCase().includes("lab");
+    const sType=isLab?`<span class="sala-type lab">Lab</span>`:`<span class="sala-type sala">Sala</span>`;
+    const tParts=r.turma.split("/").map(t=>`<span class="turma-badge">${t.trim()}</span>`).join(" ");
+    rows+=`<tr>
+      <td class="cell-date">${eHoje?'<strong style="color:var(--green)">HOJE · </strong>':''}${fmt}<span class="weekday">${dia}</span></td>
+      <td class="cell-turma">${tParts}</td>
+      <td class="cell-sala">${r.sala}${sType}</td>
+    </tr>`;
+  });
+  container.innerHTML=`
+    <div class="table-header">
+      <span class="table-header-title">Resultados</span>
+      <span class="table-count">${filtrados.length} registro${filtrados.length!==1?"s":""}</span>
+    </div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Data</th><th>Turma</th><th>Sala</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>`;
+  if(total>1){
+    pag.style.display="flex";
+    document.getElementById("pageInfo").textContent=`Página ${paginaAtual} de ${total} · ${ini+1}–${Math.min(ini+POR_PAGINA,filtrados.length)} de ${filtrados.length}`;
+    let btns=`<button class="page-btn" onclick="irPag(${paginaAtual-1})" ${paginaAtual===1?"disabled":""}>‹</button>`;
+    const range=Array.from({length:total},(_,i)=>i+1).filter(p=>p===1||p===total||Math.abs(p-paginaAtual)<=2);
+    let prev=null;
+    range.forEach(p=>{
+      if(prev&&p-prev>1) btns+=`<button class="page-btn" disabled>…</button>`;
+      btns+=`<button class="page-btn ${p===paginaAtual?"active":""}" onclick="irPag(${p})">${p}</button>`;
+      prev=p;
+    });
+    btns+=`<button class="page-btn" onclick="irPag(${paginaAtual+1})" ${paginaAtual===total?"disabled":""}>›</button>`;
+    document.getElementById("pageBtns").innerHTML=btns;
+  } else { pag.style.display="none"; }
+}
+
+function irPag(p){
+  const t=Math.ceil(filtrados.length/POR_PAGINA);
+  if(p<1||p>t) return;
+  paginaAtual=p; renderizar();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function hojeClick(){ document.getElementById("inputData").value=new Date().toISOString().split("T")[0]; filtrar(); }
+function limpar(){ ["inputTurma","inputData"].forEach(id=>document.getElementById(id).value=""); ["selectSala","selectMes"].forEach(id=>document.getElementById(id).value=""); filtrar(); }
+function showToast(msg,type="success"){
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.className="toast "+type+" show";
+  setTimeout(()=>t.classList.remove("show"),3500);
+}
+</script>
+</body>
+</html>
