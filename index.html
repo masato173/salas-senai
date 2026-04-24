@@ -72,6 +72,16 @@ body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--tex
 .btn-ghost { background: var(--border); color: var(--text); }
 .btn-ghost:hover { background: #d1d5db; }
 
+/* ── FILTRO TURNO ── */
+.turno-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.turno-btn {
+  height: 38px; padding: 0 14px; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--bg); color: var(--muted); font-family: inherit; font-size: 12px;
+  font-weight: 600; cursor: pointer; transition: .15s; white-space: nowrap;
+}
+.turno-btn:hover { border-color: var(--accent); color: var(--accent); }
+.turno-btn.ativo { background: var(--accent); border-color: var(--accent); color: #fff; }
+
 /* ── TABLE ── */
 .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
 .table-bar { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); gap: 8px; flex-wrap: wrap; }
@@ -97,6 +107,15 @@ tr.today td:first-child { border-left: 3px solid var(--today-bd); padding-left: 
 .sala-tag { font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 4px; margin-left: 6px; }
 .sala-tag.lab  { background: var(--amber-l); color: var(--amber); }
 .sala-tag.sala { background: var(--green-l); color: var(--green); }
+
+/* badge de turno na célula */
+.turno-tag {
+  font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+  margin-left: 6px; vertical-align: middle; text-transform: uppercase; letter-spacing: .04em;
+}
+.turno-tag.M { background: #fef3c7; color: #92400e; }
+.turno-tag.V { background: #dcfce7; color: #14532d; }
+.turno-tag.N { background: #ede9fe; color: #4c1d95; }
 
 /* ── EMPTY / SKELETON ── */
 .empty { padding: 64px 24px; text-align: center; }
@@ -178,6 +197,17 @@ tr.today td:first-child { border-left: 3px solid var(--today-bd); padding-left: 
       <button class="btn btn-primary" onclick="today()">Hoje</button>
       <button class="btn btn-ghost"   onclick="resetFilters()">Limpar</button>
     </div>
+
+    <!-- FILTRO TURNO — nova linha abaixo dos filtros existentes -->
+    <div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;">Turno</span>
+      <div class="turno-btns">
+        <button class="turno-btn ativo" data-turno="TODOS">Todos</button>
+        <button class="turno-btn" data-turno="M">☀ Matutino</button>
+        <button class="turno-btn" data-turno="V">🌤 Vespertino</button>
+        <button class="turno-btn" data-turno="N">🌙 Noturno</button>
+      </div>
+    </div>
   </div>
 
   <!-- TABLE -->
@@ -200,8 +230,29 @@ const API_URL   = 'https://script.google.com/macros/s/AKfycbzNNe-q-xF2PvC-yrO0CA
 const API_TOKEN = 'senai@2026';
 const PER_PAGE  = 40;
 const DAYS      = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+const TURNO_LABEL = { M: 'Mat', V: 'Ves', N: 'Not' };
 
 let all = [], filtered = [], page = 1;
+let filtroTurno = 'TODOS'; // ← estado do filtro de turno
+
+/* ── PARSE TURNO ──
+   Recebe o valor bruto do campo `turma` (pode ter múltiplas linhas).
+   Retorna array de { turma, turno }.
+   Ex: "APB.OPL.099 N\nAPB.ADM.132 M" → [{turma:'APB.OPL.099', turno:'N'}, ...]
+*/
+function parseTurmas(valor) {
+  if (!valor) return [{ turma: valor, turno: null }];
+  return String(valor)
+    .split(/\n|\//)                          // suporta múltiplas linhas e barra
+    .map(s => s.trim())
+    .filter(Boolean)
+    .map(linha => {
+      const m = linha.match(/^(.+?)\s+([MVN])$/i);
+      return m
+        ? { turma: m[1].trim(), turno: m[2].toUpperCase() }
+        : { turma: linha, turno: null };
+    });
+}
 
 /* ── LOAD ── */
 async function load() {
@@ -233,12 +284,20 @@ function filter() {
   const sala  = document.getElementById('fSala').value;
   const mes   = document.getElementById('fMes').value;
 
-  filtered = all.filter(r =>
-    (!turma || r.turma.toUpperCase().includes(turma)) &&
-    (!data  || r.data === data) &&
-    (!sala  || r.sala === sala) &&
-    (!mes   || r.mes  === mes)
-  ).sort((a, b) => a.data.localeCompare(b.data) || a.sala.localeCompare(b.sala));
+  filtered = all.filter(r => {
+    // filtros originais — sem mudança
+    if (turma && !r.turma.toUpperCase().includes(turma)) return false;
+    if (data  && r.data !== data)   return false;
+    if (sala  && r.sala !== sala)   return false;
+    if (mes   && r.mes  !== mes)    return false;
+
+    // filtro de turno: verifica se alguma das turmas da célula bate
+    if (filtroTurno !== 'TODOS') {
+      const turmas = parseTurmas(r.turma);
+      if (!turmas.some(t => t.turno === filtroTurno)) return false;
+    }
+    return true;
+  }).sort((a, b) => a.data.localeCompare(b.data) || a.sala.localeCompare(b.sala));
 
   page = 1;
   updateStats();
@@ -265,9 +324,22 @@ function render() {
     const d    = new Date(r.data + 'T12:00:00');
     const isHj = r.data === hoje;
     const isLb = r.sala.toLowerCase().includes('lab');
+
+    // monta as tags de turma com badge de turno
+    const turmas = parseTurmas(r.turma);
+    const turmaHtml = turmas
+      .filter(t => filtroTurno === 'TODOS' || t.turno === filtroTurno)
+      .map(({ turma, turno }) => {
+        const badge = turno
+          ? `<span class="turno-tag ${turno}" title="${{ M:'Matutino', V:'Vespertino', N:'Noturno' }[turno]}">${TURNO_LABEL[turno]}</span>`
+          : '';
+        return `<span class="turma">${turma}</span>${badge}`;
+      })
+      .join('<br style="margin-bottom:4px">');
+
     return `<tr class="${isHj ? 'today' : ''}">
       <td class="cell-date">${isHj ? '<span class="today-pill">Hoje</span>' : ''}<span>${d.toLocaleDateString('pt-BR')}</span><span class="day">${DAYS[d.getDay()]}</span></td>
-      <td><span class="turma">${r.turma}</span></td>
+      <td>${turmaHtml}</td>
       <td><span class="sala-name">${r.sala}</span><span class="sala-tag ${isLb ? 'lab' : 'sala'}">${isLb ? 'Lab' : 'Sala'}</span></td>
     </tr>`;
   }).join('');
@@ -307,9 +379,13 @@ function goPage(p) {
 
 /* ── HELPERS ── */
 function updateStats() {
+  // extrai só o código da turma (sem o sufixo de turno) para contagem correta
+  const turmasUnicas = new Set(
+    filtered.flatMap(r => parseTurmas(r.turma).map(t => t.turma))
+  );
   document.getElementById('sTotal').textContent  = all.length.toLocaleString('pt-BR');
   document.getElementById('sFilt').textContent   = filtered.length.toLocaleString('pt-BR');
-  document.getElementById('sTurma').textContent  = new Set(filtered.map(r => r.turma)).size;
+  document.getElementById('sTurma').textContent  = turmasUnicas.size;
   document.getElementById('sSala').textContent   = new Set(filtered.map(r => r.sala)).size;
 }
 
@@ -329,6 +405,8 @@ function today() {
 function resetFilters() {
   ['fTurma','fData'].forEach(id => document.getElementById(id).value = '');
   ['fSala','fMes'].forEach(id => document.getElementById(id).value = '');
+  filtroTurno = 'TODOS';
+  document.querySelectorAll('.turno-btn').forEach(b => b.classList.toggle('ativo', b.dataset.turno === 'TODOS'));
   filter();
 }
 
@@ -343,8 +421,17 @@ function showSkeleton() {
   document.getElementById('pager').style.display = 'none';
 }
 
+/* ── BOTÕES DE TURNO ── */
+document.querySelectorAll('.turno-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    filtroTurno = btn.dataset.turno;
+    document.querySelectorAll('.turno-btn').forEach(b => b.classList.remove('ativo'));
+    btn.classList.add('ativo');
+    filter();
+  });
+});
+
 load();
 </script>
 </body>
-</html>
 </html>
