@@ -355,6 +355,8 @@ function buildSelects() {
   const ss = document.getElementById('fSala'), sm = document.getElementById('fMes');
   ss.innerHTML = '<option value="">Todas</option>' + salas.map(s => `<option>${s}</option>`).join('');
   sm.innerHTML = '<option value="">Todos</option>' + meses.map(m => `<option>${m}</option>`).join('');
+  ss.value = '';  // ← garante que começa em "Todas"
+  sm.value = '';  // ← garante que começa em "Todos"
 }
 
 function today() {
