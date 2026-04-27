@@ -108,10 +108,13 @@ tr.today td:first-child { border-left: 3px solid var(--today-bd); padding-left: 
 .sala-tag.sala { background: var(--green-l); color: var(--green); }
 
 /* badge de turno */
-.turno-tag { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-left: 6px; vertical-align: middle; text-transform: uppercase; letter-spacing: .04em; }
+.turno-tag { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; margin-left: 6px; vertical-align: middle; }
 .turno-tag.M { background: #fef3c7; color: #92400e; }
 .turno-tag.V { background: #dcfce7; color: #14532d; }
 .turno-tag.N { background: #ede9fe; color: #4c1d95; }
+
+/* sem turno mapeado */
+.turno-tag.sem { background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
 
 /* ── EMPTY / SKELETON ── */
 .empty { padding: 64px 24px; text-align: center; }
@@ -225,14 +228,16 @@ const API_URL     = 'https://script.google.com/macros/s/AKfycbzNNe-q-xF2PvC-yrO0
 const API_TOKEN   = 'senai@2026';
 const PER_PAGE    = 40;
 const DAYS        = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-const TURNO_LABEL = { M: 'Mat', V: 'Ves', N: 'Not' };
+const TURNO_LABEL = { M: 'Matutino', V: 'Vespertino', N: 'Noturno' };
 
-// ── ESTADO GLOBAL ──────────────────────────────────────────
-let all = [], filtered = [], page = 1;
-let filtroTurno = 'TODOS';
-let turnoMap    = {};          // { 'APB.OPL.015': 'V', ... } — vem do backend
+// ── ESTADO GLOBAL ──────────────────────────────────────────────────────────
+let all         = [];       // todos os registros vindos da API
+let filtered    = [];       // registros após aplicar os filtros
+let page        = 1;
+let filtroTurno = 'TODOS'; // 'TODOS' | 'M' | 'V' | 'N'
+let turnoMap    = {};       // { 'APB.OPL.015': 'V', ... } — fonte: backend
 
-// ── LOAD ───────────────────────────────────────────────────
+// ── LOAD ───────────────────────────────────────────────────────────────────
 async function load() {
   setStatus('loading', 'Carregando…');
   document.getElementById('btnRefresh').classList.add('spinning');
@@ -241,22 +246,31 @@ async function load() {
     const res  = await fetch(`${API_URL}?token=${encodeURIComponent(API_TOKEN)}`);
     const json = await res.json();
     if (json.error) throw new Error(json.error);
+
     all      = json.dados    || [];
-    turnoMap = json.turnoMap || {};   // ← preenche o dicionário
+    turnoMap = json.turnoMap || {};
+
+    // Aviso de diagnóstico: se turnoMap chegou vazio, filtro de turno não vai funcionar
+    if (!Object.keys(turnoMap).length) {
+      console.warn('[SENAI] turnoMap vazio — verifique se o Apps Script foi reimplantado e se a aba "Lista de turmas" existe.');
+    }
+
     buildSelects();
     filter();
+
     const now = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit',minute:'2-digit'});
     document.getElementById('headerMeta').textContent = `SENAI · Atualizado às ${now}`;
     setStatus('ok', `${all.length.toLocaleString('pt-BR')} registros`);
   } catch(e) {
     setStatus('error', 'Erro: ' + e.message);
-    document.getElementById('tableBody').innerHTML = `<div class="empty"><div class="empty-icon">⚠</div><div class="empty-text">Falha ao carregar</div><div class="empty-sub">${e.message}</div></div>`;
+    document.getElementById('tableBody').innerHTML =
+      `<div class="empty"><div class="empty-icon">⚠</div><div class="empty-text">Falha ao carregar</div><div class="empty-sub">${e.message}</div></div>`;
   } finally {
     document.getElementById('btnRefresh').classList.remove('spinning');
   }
 }
 
-// ── FILTER ─────────────────────────────────────────────────
+// ── FILTER ─────────────────────────────────────────────────────────────────
 function filter() {
   const turma = document.getElementById('fTurma').value.trim().toUpperCase();
   const data  = document.getElementById('fData').value;
@@ -268,7 +282,10 @@ function filter() {
     if (data  && r.data !== data)  return false;
     if (sala  && r.sala !== sala)  return false;
     if (mes   && r.mes  !== mes)   return false;
-    if (filtroTurno !== 'TODOS' && turnoMap[r.turma] !== filtroTurno) return false; // ← lookup direto
+
+    // FIX: .trim() defensivo na chave — evita quebrar se vier espaço no nome da turma
+    if (filtroTurno !== 'TODOS' && turnoMap[r.turma.trim()] !== filtroTurno) return false;
+
     return true;
   }).sort((a, b) => a.data.localeCompare(b.data) || a.sala.localeCompare(b.sala));
 
@@ -277,7 +294,7 @@ function filter() {
   render();
 }
 
-// ── RENDER ─────────────────────────────────────────────────
+// ── RENDER ─────────────────────────────────────────────────────────────────
 function render() {
   const total = Math.ceil(filtered.length / PER_PAGE);
   const start = (page - 1) * PER_PAGE;
@@ -285,7 +302,8 @@ function render() {
   const hoje  = new Date().toISOString().slice(0, 10);
   const body  = document.getElementById('tableBody');
 
-  document.getElementById('countBadge').textContent = filtered.length + ' resultado' + (filtered.length !== 1 ? 's' : '');
+  document.getElementById('countBadge').textContent =
+    filtered.length + ' resultado' + (filtered.length !== 1 ? 's' : '');
 
   if (!filtered.length) {
     body.innerHTML = `<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">Nenhum resultado</div><div class="empty-sub">Tente ajustar os filtros</div></div>`;
@@ -298,18 +316,33 @@ function render() {
     const isHj = r.data === hoje;
     const isLb = r.sala.toLowerCase().includes('lab');
 
-    const turno     = turnoMap[r.turma] || null;  // ← lookup direto, sem regex
-    const badge     = turno ? `<span class="turno-tag ${turno}" title="${{M:'Matutino',V:'Vespertino',N:'Noturno'}[turno]}">${TURNO_LABEL[turno]}</span>` : '';
-    const turmaHtml = `<span class="turma">${r.turma}</span>${badge}`;
+    // Lookup com .trim() defensivo — mesma proteção do filter()
+    const turno = turnoMap[r.turma.trim()] || null;
+    const badge = turno
+      ? `<span class="turno-tag ${turno}" title="${TURNO_LABEL[turno]}">${TURNO_LABEL[turno]}</span>`
+      : `<span class="turno-tag sem" title="Turno não mapeado">—</span>`;
 
     return `<tr class="${isHj ? 'today' : ''}">
-      <td class="cell-date">${isHj ? '<span class="today-pill">Hoje</span>' : ''}<span>${d.toLocaleDateString('pt-BR')}</span><span class="day">${DAYS[d.getDay()]}</span></td>
-      <td>${turmaHtml}</td>
-      <td><span class="sala-name">${r.sala}</span><span class="sala-tag ${isLb ? 'lab' : 'sala'}">${isLb ? 'Lab' : 'Sala'}</span></td>
+      <td class="cell-date">
+        ${isHj ? '<span class="today-pill">Hoje</span>' : ''}
+        <span>${d.toLocaleDateString('pt-BR')}</span>
+        <span class="day">${DAYS[d.getDay()]}</span>
+      </td>
+      <td>
+        <span class="turma">${r.turma}</span>${badge}
+      </td>
+      <td>
+        <span class="sala-name">${r.sala}</span>
+        <span class="sala-tag ${isLb ? 'lab' : 'sala'}">${isLb ? 'Lab' : 'Sala'}</span>
+      </td>
     </tr>`;
   }).join('');
 
-  body.innerHTML = `<div class="table-scroll"><table><thead><tr><th>Data</th><th>Turma</th><th>Sala</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  body.innerHTML = `<div class="table-scroll"><table>
+    <thead><tr><th>Data</th><th>Turma / Turno</th><th>Sala</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+
   renderPager(total);
 }
 
@@ -341,7 +374,7 @@ function goPage(p) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ── HELPERS ────────────────────────────────────────────────
+// ── HELPERS ────────────────────────────────────────────────────────────────
 function updateStats() {
   document.getElementById('sTotal').textContent = all.length.toLocaleString('pt-BR');
   document.getElementById('sFilt').textContent  = filtered.length.toLocaleString('pt-BR');
@@ -350,13 +383,19 @@ function updateStats() {
 }
 
 function buildSelects() {
-  const salas = [...new Set(all.map(r => r.sala))].sort((a, b) => (parseInt(a)||9999) - (parseInt(b)||9999) || a.localeCompare(b));
+  const salas = [...new Set(all.map(r => r.sala))].sort(
+    (a, b) => (parseInt(a)||9999) - (parseInt(b)||9999) || a.localeCompare(b)
+  );
   const meses = [...new Set(all.map(r => r.mes))];
-  const ss = document.getElementById('fSala'), sm = document.getElementById('fMes');
+
+  const ss = document.getElementById('fSala');
+  const sm = document.getElementById('fMes');
   ss.innerHTML = '<option value="">Todas</option>' + salas.map(s => `<option>${s}</option>`).join('');
   sm.innerHTML = '<option value="">Todos</option>' + meses.map(m => `<option>${m}</option>`).join('');
-  ss.value = '';  // ← garante que começa em "Todas"
-  sm.value = '';  // ← garante que começa em "Todos"
+
+  // FIX: garante que os selects iniciam sem valor selecionado
+  ss.value = '';
+  sm.value = '';
 }
 
 function today() {
@@ -366,9 +405,11 @@ function today() {
 
 function resetFilters() {
   ['fTurma','fData'].forEach(id => document.getElementById(id).value = '');
-  ['fSala','fMes'].forEach(id => document.getElementById(id).value = '');
+  ['fSala','fMes'].forEach(id => { document.getElementById(id).value = ''; });
   filtroTurno = 'TODOS';
-  document.querySelectorAll('.turno-btn').forEach(b => b.classList.toggle('ativo', b.dataset.turno === 'TODOS'));
+  document.querySelectorAll('.turno-btn').forEach(b =>
+    b.classList.toggle('ativo', b.dataset.turno === 'TODOS')
+  );
   filter();
 }
 
@@ -379,11 +420,12 @@ function setStatus(type, txt) {
 }
 
 function showSkeleton() {
-  document.getElementById('tableBody').innerHTML = [1,2,3,4,5].map(() => `<div class="skeleton"></div>`).join('');
+  document.getElementById('tableBody').innerHTML =
+    [1,2,3,4,5].map(() => `<div class="skeleton"></div>`).join('');
   document.getElementById('pager').style.display = 'none';
 }
 
-// ── BOTÕES DE TURNO ────────────────────────────────────────
+// ── BOTÕES DE TURNO ────────────────────────────────────────────────────────
 document.querySelectorAll('.turno-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     filtroTurno = btn.dataset.turno;
