@@ -271,7 +271,29 @@ async function load() {
 }
 
 // ── FILTER ─────────────────────────────────────────────────────────────────
-function filter() {
+function getTurno(turma) {
+  if (!turma) return null;
+
+  turma = turma.trim();
+
+  // 1. tenta direto
+  if (turnoMap[turma]) return turnoMap[turma];
+
+  // 2. tenta partes (caso tenha "/")
+  const partes = turma.split('/').map(s => s.trim());
+
+  for (let parte of partes) {
+    // tenta direto
+    if (turnoMap[parte]) return turnoMap[parte];
+
+    // tenta casar pelo final (ex: ".016")
+    const encontrado = Object.keys(turnoMap).find(t => t.endsWith(parte));
+    if (encontrado) return turnoMap[encontrado];
+  }
+
+  return null;
+}
+  function filter() {
   const turma = document.getElementById('fTurma').value.trim().toUpperCase();
   const data  = document.getElementById('fData').value;
   const sala  = document.getElementById('fSala').value;
@@ -283,8 +305,7 @@ function filter() {
     if (sala  && r.sala !== sala)  return false;
     if (mes   && r.mes  !== mes)   return false;
 
-    // FIX: .trim() defensivo na chave — evita quebrar se vier espaço no nome da turma
-    if (filtroTurno !== 'TODOS' && turnoMap[r.turma.trim()] !== filtroTurno) return false;
+if (filtroTurno !== 'TODOS' && getTurno(r.turma) !== filtroTurno) return false;
 
     return true;
   }).sort((a, b) => a.data.localeCompare(b.data) || a.sala.localeCompare(b.sala));
@@ -317,7 +338,7 @@ function render() {
     const isLb = r.sala.toLowerCase().includes('lab');
 
     // Lookup com .trim() defensivo — mesma proteção do filter()
-    const turno = turnoMap[r.turma.trim()] || null;
+ const turno = getTurno(r.turma);
     const badge = turno
       ? `<span class="turno-tag ${turno}" title="${TURNO_LABEL[turno]}">${TURNO_LABEL[turno]}</span>`
       : `<span class="turno-tag sem" title="Turno não mapeado">—</span>`;
