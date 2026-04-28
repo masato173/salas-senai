@@ -248,12 +248,9 @@ async function load() {
     if (json.error) throw new Error(json.error);
 
     all      = json.dados    || [];
-    turnoMap = json.turnoMap || {};
 
     // Aviso de diagnóstico: se turnoMap chegou vazio, filtro de turno não vai funcionar
-    if (!Object.keys(turnoMap).length) {
-      console.warn('[SENAI] turnoMap vazio — verifique se o Apps Script foi reimplantado e se a aba "Lista de turmas" existe.');
-    }
+ 
 
     buildSelects();
     filter();
@@ -305,7 +302,7 @@ function getTurno(turma) {
     if (sala  && r.sala !== sala)  return false;
     if (mes   && r.mes  !== mes)   return false;
 
-if (filtroTurno !== 'TODOS' && (r.turno || '').trim() !== filtroTurno) return false;
+if (filtroTurno !== 'TODOS' && r.turno !== filtroTurno) return false;
 
     return true;
   }).sort((a, b) => a.data.localeCompare(b.data) || a.sala.localeCompare(b.sala));
@@ -338,7 +335,7 @@ function render() {
     const isLb = r.sala.toLowerCase().includes('lab');
 
     // Lookup com .trim() defensivo — mesma proteção do filter()
-  const turno = (r.turno || '').trim();
+const turno = r.turno || null;
   const badge = turno
     ? `<span class="turno-tag ${turno}">${TURNO_LABEL[turno]}</span>`
     : `<span class="turno-tag sem">—</span>`;
@@ -459,4 +456,5 @@ document.querySelectorAll('.turno-btn').forEach(btn => {
 load();
 </script>
 </body>
+</html>
 </html>
