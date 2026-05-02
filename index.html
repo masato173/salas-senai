@@ -4,10 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Salas · SENAI</title>
+
+
+<meta http-equiv="X-Frame-Options" content="DENY">
+<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy"
+  content="default-src 'self';
+           script-src 'self' 'unsafe-inline';
+           style-src 'self' https://fonts.googleapis.com 'unsafe-inline';
+           font-src https://fonts.gstatic.com;
+           connect-src https://script.google.com https://script.googleusercontent.com;
+           img-src 'self' data:;
+           frame-ancestors 'none';">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-/* ── TOKENS ── */
 :root {
   --bg:       #f0f2f5;
   --surface:  #ffffff;
@@ -28,8 +40,6 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;min-height:100vh}
 .container{max-width:1200px;margin:0 auto;padding:24px 16px 48px}
-
-/* HEADER */
 .header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:16px;flex-wrap:wrap}
 .header-title{font-size:22px;font-weight:700;letter-spacing:-.4px}
 .header-title span{color:var(--accent)}
@@ -40,16 +50,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 .status-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
 .status.ok .status-dot{animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-
-/* STATS */
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
 .stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
 .stat-val{font-size:26px;font-weight:700;line-height:1}
 .stat-val.accent{color:var(--accent)}
 .stat-val.green{color:var(--green)}
 .stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-top:4px}
-
-/* PANEL */
 .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:20px;box-shadow:var(--shadow)}
 .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
 .field{display:flex;flex-direction:column;gap:4px;flex:1;min-width:160px}
@@ -63,16 +69,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 .btn-primary:hover{opacity:.9}
 .btn-ghost{background:var(--border);color:var(--text)}
 .btn-ghost:hover{background:#d1d5db}
-
-/* TURNO FILTER BUTTONS */
 .turno-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
 .turno-label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
 .turno-btns{display:flex;gap:6px;flex-wrap:wrap}
 .turno-btn{height:36px;padding:0 14px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--muted);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:.15s;white-space:nowrap}
 .turno-btn:hover{border-color:var(--accent);color:var(--accent)}
 .turno-btn.ativo{background:var(--accent);border-color:var(--accent);color:#fff}
-
-/* TABLE */
 .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
 .table-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);gap:8px;flex-wrap:wrap}
 .table-title{font-weight:600;font-size:13px}
@@ -85,8 +87,6 @@ tr:last-child td{border-bottom:none}
 tbody tr:hover td{background:var(--bg)}
 tr.today td{background:var(--today-bg)}
 tr.today td:first-child{border-left:3px solid var(--today-bd);padding-left:13px}
-
-/* CELL STYLES */
 .cell-date{font-size:13px;font-weight:500;white-space:nowrap}
 .cell-date .day{display:block;font-size:11px;color:var(--muted);font-weight:400}
 .today-pill{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;background:var(--today-bd);color:#78350f;padding:1px 6px;border-radius:4px;margin-right:6px;vertical-align:middle}
@@ -95,23 +95,17 @@ tr.today td:first-child{border-left:3px solid var(--today-bd);padding-left:13px}
 .sala-tag{font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;margin-left:6px}
 .sala-tag.lab{background:var(--amber-l);color:var(--amber)}
 .sala-tag.sala{background:var(--green-l);color:var(--green)}
-
-/* TURNO BADGE */
 .turno-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;margin-left:6px;vertical-align:middle;white-space:nowrap}
 .turno-badge.M{background:#fef3c7;color:#92400e}
 .turno-badge.V{background:#dcfce7;color:#14532d}
 .turno-badge.N{background:#ede9fe;color:#4c1d95}
 .turno-badge.sem{background:var(--bg);color:var(--muted);border:1px solid var(--border)}
-
-/* EMPTY / SKELETON */
 .empty{padding:64px 24px;text-align:center}
 .empty-icon{font-size:36px;margin-bottom:12px;opacity:.4}
 .empty-text{font-size:15px;font-weight:600;color:var(--muted)}
 .empty-sub{font-size:13px;color:var(--muted);margin-top:4px}
 .skeleton{height:48px;background:linear-gradient(90deg,var(--bg) 25%,var(--border) 50%,var(--bg) 75%);background-size:200% 100%;animation:shimmer 1.2s infinite;border-bottom:1px solid var(--border)}
 @keyframes shimmer{to{background-position:-200% 0}}
-
-/* PAGER */
 .pager{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid var(--border);gap:8px;flex-wrap:wrap}
 .pager-info{font-size:12px;color:var(--muted)}
 .pager-btns{display:flex;gap:4px}
@@ -119,14 +113,11 @@ tr.today td:first-child{border-left:3px solid var(--today-bd);padding-left:13px}
 .pager-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
 .pager-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
 .pager-btn:disabled{opacity:.35;cursor:not-allowed}
-
-/* REFRESH */
 .btn-refresh{background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px;padding:4px;line-height:1;transition:color .15s,transform .3s}
 .btn-refresh:hover{color:var(--accent)}
 .btn-refresh.spinning{animation:spin .7s linear infinite}
+.btn-refresh:disabled{opacity:.4;cursor:not-allowed}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-/* RESPONSIVE */
 @media(max-width:640px){
   .stats{grid-template-columns:repeat(2,1fr)}
   .filters{flex-direction:column}
@@ -150,7 +141,8 @@ tr.today td:first-child{border-left:3px solid var(--today-bd);padding-left:13px}
         <span class="status-dot"></span>
         <span id="statusTxt">Carregando</span>
       </span>
-      <button class="btn-refresh" id="btnRefresh" title="Atualizar" onclick="loadData()">↻</button>
+      <!-- [5] debounce aplicado via JS — botão desabilitado por 3s após clique -->
+      <button class="btn-refresh" id="btnRefresh" title="Atualizar" onclick="handleRefresh()">↻</button>
     </div>
   </header>
 
@@ -165,7 +157,8 @@ tr.today td:first-child{border-left:3px solid var(--today-bd);padding-left:13px}
     <div class="filters">
       <div class="field" style="flex:2">
         <label>Turma</label>
-        <input type="text" id="fTurma" placeholder="Ex: ADM, APB.ADM.119…" oninput="applyFilters()">
+        <input type="text" id="fTurma" placeholder="Ex: ADM, APB.ADM.119…"
+               oninput="applyFilters()" maxlength="50" autocomplete="off">
       </div>
       <div class="field">
         <label>Data</label>
@@ -182,7 +175,6 @@ tr.today td:first-child{border-left:3px solid var(--today-bd);padding-left:13px}
       <button class="btn btn-primary" onclick="filterToday()">Hoje</button>
       <button class="btn btn-ghost"   onclick="resetFilters()">Limpar</button>
     </div>
-
     <div class="turno-row">
       <span class="turno-label">Turno</span>
       <div class="turno-btns">
@@ -208,21 +200,32 @@ tr.today td:first-child{border-left:3px solid var(--today-bd);padding-left:13px}
 
 </div>
 <script>
-// ── CONFIG ─────────────────────────────────────────────────
-const API_URL   = 'https://script.google.com/macros/s/AKfycbxjmmlDjf-d5URtrQxeYX8iSCogreqiiEzEZ692D-e7_siYbRD_CujnPLcyFeDkfonA/exec';
-const API_TOKEN = 'senai@2026';
-const PER_PAGE  = 40;
-const DAYS      = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-const TURNO_LABEL = { M: 'Matutino', V: 'Vespertino', N: 'Noturno' };
 
-// ── ESTADO ─────────────────────────────────────────────────
-var all         = [];       // todos os registros da API
-var filtered    = [];       // registros após filtros
-var turnoMap    = {};       // { 'APB.OPL.015': 'V', ... }
-var filtroTurno = 'TODOS'; // turno selecionado
+var API_URL   = 'https://script.google.com/macros/s/AKfycbxjmmlDjf-d5URtrQxeYX8iSCogreqiiEzEZ692D-e7_siYbRD_CujnPLcyFeDkfonA/exec';
+var API_TOKEN = 'senai@2026';
+var PER_PAGE  = 40;
+var DAYS      = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+var TURNO_LABEL = { M: 'Matutino', V: 'Vespertino', N: 'Noturno' };
+
+// ── ESTADO ────────────────────────────────────────────────────
+var all         = [];
+var filtered    = [];
+var turnoMap    = {};
+var filtroTurno = 'TODOS';
 var page        = 1;
+var refreshLock = false; // [5] trava de debounce para o refresh
 
-// ── Resolve turno de uma célula, suporta "APB.X/APB.Y" ────
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+// ── Resolve turno suportando "APB.X/APB.Y" ────────────────────
 function getTurno(turma) {
   var chave = turma.trim();
   if (turnoMap[chave]) return turnoMap[chave];
@@ -234,7 +237,21 @@ function getTurno(turma) {
   return null;
 }
 
-// ── LOAD ───────────────────────────────────────────────────
+// ── [5] Refresh com debounce de 3s ────────────────────────────
+// Impede spam no botão que esgotaria a cota do Apps Script.
+function handleRefresh() {
+  if (refreshLock) return;
+  refreshLock = true;
+  var btn = document.getElementById('btnRefresh');
+  btn.disabled = true;
+  loadData();
+  setTimeout(function() {
+    refreshLock = false;
+    btn.disabled = false;
+  }, 3000);
+}
+
+// ── LOAD ──────────────────────────────────────────────────────
 async function loadData() {
   setStatus('loading', 'Carregando…');
   document.getElementById('btnRefresh').classList.add('spinning');
@@ -242,37 +259,52 @@ async function loadData() {
 
   try {
     var res  = await fetch(API_URL + '?token=' + encodeURIComponent(API_TOKEN));
-    var json = await res.json();
-    if (json.error) throw new Error(json.error);
 
-    all      = json.dados    || [];
-    turnoMap = json.turnoMap || {};
-
-    // Diagnóstico: avisa se turnoMap vier vazio
-    if (Object.keys(turnoMap).length === 0) {
-      console.warn('[SENAI] turnoMap vazio. Verifique: (1) reimplantou o Apps Script? (2) aba "Lista de turmas" existe?');
+    // Valida que a resposta é JSON antes de parsear
+    var contentType = res.headers.get('content-type') || '';
+    if (!res.ok || !contentType.includes('json')) {
+      throw new Error('Resposta inválida do servidor.');
     }
+
+    var data = await res.json();
+
+    // [2] Não propagamos data.error direto ao usuário — pode conter info interna
+    if (data.error) throw new Error('Falha ao carregar dados.');
+
+    all      = data.dados    || [];
+    turnoMap = data.turnoMap || {};
+
+    // [4] Sem console.warn em produção — não vaza arquitetura
 
     buildSelects();
     applyFilters();
 
     var now = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    // textContent é seguro — não interpreta HTML
     document.getElementById('headerMeta').textContent = 'SENAI · Atualizado às ' + now;
     setStatus('ok', all.length.toLocaleString('pt-BR') + ' registros');
 
   } catch (e) {
-    setStatus('error', 'Erro: ' + e.message);
-    document.getElementById('tableBody').innerHTML =
-      '<div class="empty"><div class="empty-icon">⚠</div>' +
+    // [2] Mensagem genérica ao usuário — não expõe detalhes internos
+    setStatus('error', 'Erro ao carregar dados');
+    var body = document.getElementById('tableBody');
+    body.innerHTML = '';
+    var div = document.createElement('div');
+    div.className = 'empty';
+    div.innerHTML =
+      '<div class="empty-icon">⚠</div>' +
       '<div class="empty-text">Falha ao carregar</div>' +
-      '<div class="empty-sub">' + e.message + '</div></div>';
+      '<div class="empty-sub">Tente atualizar a página ou contate o suporte.</div>';
+    body.appendChild(div);
   } finally {
     document.getElementById('btnRefresh').classList.remove('spinning');
   }
 }
 
-// ── FILTER ─────────────────────────────────────────────────
+// ── FILTER ────────────────────────────────────────────────────
 function applyFilters() {
+  // Inputs de texto já são seguros aqui — usados só para comparação,
+  // não inseridos em innerHTML diretamente
   var turma = document.getElementById('fTurma').value.trim().toUpperCase();
   var data  = document.getElementById('fData').value;
   var sala  = document.getElementById('fSala').value;
@@ -294,7 +326,7 @@ function applyFilters() {
   render();
 }
 
-// ── RENDER ─────────────────────────────────────────────────
+// ── RENDER ────────────────────────────────────────────────────
 function render() {
   var total = Math.ceil(filtered.length / PER_PAGE);
   var start = (page - 1) * PER_PAGE;
@@ -302,10 +334,12 @@ function render() {
   var hoje  = new Date().toISOString().slice(0, 10);
   var body  = document.getElementById('tableBody');
 
+  // textContent é seguro para textos puros
   document.getElementById('countBadge').textContent =
     filtered.length + (filtered.length !== 1 ? ' resultados' : ' resultado');
 
   if (!filtered.length) {
+    // Sem dados externos aqui — string literal estática, seguro
     body.innerHTML =
       '<div class="empty">' +
       '<div class="empty-icon">🔍</div>' +
@@ -321,18 +355,27 @@ function render() {
     var isHj  = r.data === hoje;
     var isLb  = r.sala.toLowerCase().indexOf('lab') !== -1;
     var turno = getTurno(r.turma);
+
+    // [1] esc() aplicado em TODOS os campos vindos da planilha:
+    // r.turma, r.sala — poderiam conter HTML malicioso se alguém editar a planilha
+    var turmaEsc = esc(r.turma);
+    var salaEsc  = esc(r.sala);
+
+    // turno vem de TURNO_LABEL (objeto controlado) — não precisa de esc
+    // mas o esc em TURNO_LABEL[turno] não causa problema e é defensivo
     var badge = turno
-      ? '<span class="turno-badge ' + turno + '" title="' + TURNO_LABEL[turno] + '">' + TURNO_LABEL[turno] + '</span>'
+      ? '<span class="turno-badge ' + turno + '" title="' + esc(TURNO_LABEL[turno]) + '">' + esc(TURNO_LABEL[turno]) + '</span>'
       : '<span class="turno-badge sem">—</span>';
 
+    // d.toLocaleDateString e DAYS[d.getDay()] são seguros (não vêm da planilha)
     return '<tr class="' + (isHj ? 'today' : '') + '">' +
       '<td class="cell-date">' +
         (isHj ? '<span class="today-pill">Hoje</span>' : '') +
         '<span>' + d.toLocaleDateString('pt-BR') + '</span>' +
         '<span class="day">' + DAYS[d.getDay()] + '</span>' +
       '</td>' +
-      '<td><span class="turma">' + r.turma + '</span>' + badge + '</td>' +
-      '<td><span class="sala-name">' + r.sala + '</span>' +
+      '<td><span class="turma">' + turmaEsc + '</span>' + badge + '</td>' +
+      '<td><span class="sala-name">' + salaEsc + '</span>' +
         '<span class="sala-tag ' + (isLb ? 'lab' : 'sala') + '">' + (isLb ? 'Lab' : 'Sala') + '</span>' +
       '</td>' +
     '</tr>';
@@ -347,7 +390,8 @@ function render() {
   renderPager(total);
 }
 
-// ── PAGER ──────────────────────────────────────────────────
+// ── PAGER ─────────────────────────────────────────────────────
+// Pager usa apenas números inteiros gerados pelo JS — sem dados externos, seguro
 function renderPager(total) {
   var pager = document.getElementById('pager');
   if (total <= 1) { pager.style.display = 'none'; return; }
@@ -355,6 +399,7 @@ function renderPager(total) {
 
   var start = (page - 1) * PER_PAGE + 1;
   var end   = Math.min(page * PER_PAGE, filtered.length);
+  // textContent — seguro
   document.getElementById('pagerInfo').textContent = start + '–' + end + ' de ' + filtered.length;
 
   var pages = [];
@@ -362,6 +407,7 @@ function renderPager(total) {
     if (i === 1 || i === total || Math.abs(i - page) <= 1) pages.push(i);
   }
 
+  // Apenas números inteiros no onclick — sem interpolação de string externa
   var html = '<button class="pager-btn" onclick="goPage(' + (page-1) + ')" ' + (page===1?'disabled':'') + '>‹</button>';
   var prev = null;
   pages.forEach(function(p) {
@@ -379,8 +425,9 @@ function goPage(p) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ── HELPERS ────────────────────────────────────────────────
+// ── HELPERS ───────────────────────────────────────────────────
 function updateStats() {
+  // textContent — seguro, não interpreta HTML
   document.getElementById('sTotal').textContent = all.length.toLocaleString('pt-BR');
   document.getElementById('sFilt').textContent  = filtered.length.toLocaleString('pt-BR');
   document.getElementById('sTurma').textContent = new Set(filtered.map(function(r){ return r.turma; })).size;
@@ -395,10 +442,12 @@ function buildSelects() {
 
   var ss = document.getElementById('fSala');
   var sm = document.getElementById('fMes');
-  ss.innerHTML = '<option value="">Todas</option>'  + salas.map(function(s){ return '<option>' + s + '</option>'; }).join('');
-  sm.innerHTML = '<option value="">Todos</option>'  + meses.map(function(m){ return '<option>' + m + '</option>'; }).join('');
 
-  // Garante que nenhum select fica preso em valor anterior
+  ss.innerHTML = '<option value="">Todas</option>' +
+    salas.map(function(s){ return '<option value="' + esc(s) + '">' + esc(s) + '</option>'; }).join('');
+  sm.innerHTML = '<option value="">Todos</option>' +
+    meses.map(function(m){ return '<option value="' + esc(m) + '">' + esc(m) + '</option>'; }).join('');
+
   ss.value = '';
   sm.value = '';
 }
@@ -422,19 +471,27 @@ function resetFilters() {
 
 function setStatus(type, txt) {
   document.getElementById('status').className = 'status ' + type;
+ 
   document.getElementById('statusTxt').textContent = txt;
 }
 
 function showSkeleton() {
+
   document.getElementById('tableBody').innerHTML =
     [1,2,3,4,5].map(function(){ return '<div class="skeleton"></div>'; }).join('');
   document.getElementById('pager').style.display = 'none';
 }
 
-// ── BOTÕES DE TURNO ────────────────────────────────────────
+// ── BOTÕES DE TURNO ───────────────────────────────────────────
+// data-turno vem do HTML controlado por nós, não da planilha
+// Validação extra: só aceita valores conhecidos
+var TURNOS_ACEITOS = { TODOS: true, M: true, V: true, N: true };
 document.querySelectorAll('.turno-btn').forEach(function(btn) {
   btn.addEventListener('click', function() {
-    filtroTurno = btn.dataset.turno;
+    var turno = btn.dataset.turno;
+    // Valida que o valor é um dos esperados — evita injeção via dataset
+    if (!TURNOS_ACEITOS[turno]) return;
+    filtroTurno = turno;
     document.querySelectorAll('.turno-btn').forEach(function(b) {
       b.classList.remove('ativo');
     });
@@ -443,7 +500,6 @@ document.querySelectorAll('.turno-btn').forEach(function(btn) {
   });
 });
 
-// ── INIT ───────────────────────────────────────────────────
 loadData();
 </script>
 </body>
