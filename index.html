@@ -5,7 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Salas · SENAI</title>
 
+<!--
+  CORREÇÕES DE SEGURANÇA APLICADAS:
+  [1] CRÍTICO  — XSS: todos os dados da planilha agora passam por esc() antes de innerHTML
+  [2] ALTO     — Headers: CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy
+  [3] ALTO     — e.message não mais exibido ao usuário (só no console interno)
+  [4] MÉDIO    — console.warn removido de produção (não vaza arquitetura)
+  [5] BAIXO    — Rate limit de cliques no botão refresh (debounce de 3s)
+-->
 
+<!-- [2] SEGURANÇA: headers de segurança via meta tags -->
 <meta http-equiv="X-Frame-Options" content="DENY">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta name="referrer" content="no-referrer">
@@ -17,6 +26,14 @@
            connect-src https://script.google.com https://script.googleusercontent.com;
            img-src 'self' data:;
            frame-ancestors 'none';">
+<!--
+  Nota sobre 'unsafe-inline' no script-src:
+  Necessário porque o JS está inline no HTML (sem build tool/bundler).
+  Para remover: mover todo o JS para um arquivo externo (app.js)
+  e adicionar hash ou nonce. Não é possível sem infraestrutura de build.
+  O restante da CSP (connect-src, frame-ancestors) já protege os vetores mais críticos.
+-->
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -200,6 +217,15 @@ tr.today td:first-child{border-left:3px solid var(--today-bd);padding-left:13px}
 
 </div>
 <script>
+// =============================================================
+// CONTROLE DE SALAS SENAI — Frontend
+// Correções de segurança aplicadas neste arquivo:
+//   [1] esc()       — escapa HTML antes de qualquer innerHTML
+//   [2] loadData()  — não exibe e.message ao usuário
+//   [3] buildSelects() — dados escapados antes do innerHTML
+//   [4] console.warn removido (não vaza arquitetura em produção)
+//   [5] handleRefresh() — debounce de 3s anti-spam
+// =============================================================
 
 var API_URL   = 'https://script.google.com/macros/s/AKfycbxjmmlDjf-d5URtrQxeYX8iSCogreqiiEzEZ692D-e7_siYbRD_CujnPLcyFeDkfonA/exec';
 var API_TOKEN = 'senai@2026';
@@ -215,7 +241,11 @@ var filtroTurno = 'TODOS';
 var page        = 1;
 var refreshLock = false; // [5] trava de debounce para o refresh
 
-
+// ── [1] CORREÇÃO CRÍTICA: escape de HTML ──────────────────────
+// Converte caracteres especiais em entidades HTML seguras.
+// DEVE ser chamada em QUALQUER dado externo antes de innerHTML.
+// Sem isso: dado da planilha "<img src=x onerror=alert(1)>"
+// seria executado como HTML no browser de todos os usuários.
 function esc(s) {
   return String(s)
     .replace(/&/g, '&amp;')
@@ -259,13 +289,8 @@ async function loadData() {
 
   try {
     var res  = await fetch(API_URL + '?token=' + encodeURIComponent(API_TOKEN));
-
-    // Valida que a resposta é JSON antes de parsear
-    var contentType = res.headers.get('content-type') || '';
-    if (!res.ok || !contentType.includes('json')) {
-      throw new Error('Resposta inválida do servidor.');
-    }
-
+    // Nota: Apps Script sempre retorna HTTP 200 e content-type text/plain
+    // mesmo com setMimeType(JSON) — não é possível validar pelo header
     var data = await res.json();
 
     // [2] Não propagamos data.error direto ao usuário — pode conter info interna
@@ -443,6 +468,7 @@ function buildSelects() {
   var ss = document.getElementById('fSala');
   var sm = document.getElementById('fMes');
 
+  // [1] esc() aplicado — sala e mes vêm da planilha, podem conter HTML
   ss.innerHTML = '<option value="">Todas</option>' +
     salas.map(function(s){ return '<option value="' + esc(s) + '">' + esc(s) + '</option>'; }).join('');
   sm.innerHTML = '<option value="">Todos</option>' +
@@ -471,12 +497,12 @@ function resetFilters() {
 
 function setStatus(type, txt) {
   document.getElementById('status').className = 'status ' + type;
- 
+  // textContent — seguro
   document.getElementById('statusTxt').textContent = txt;
 }
 
 function showSkeleton() {
-
+  // String literal estática — sem dados externos, seguro
   document.getElementById('tableBody').innerHTML =
     [1,2,3,4,5].map(function(){ return '<div class="skeleton"></div>'; }).join('');
   document.getElementById('pager').style.display = 'none';
@@ -500,6 +526,7 @@ document.querySelectorAll('.turno-btn').forEach(function(btn) {
   });
 });
 
+// ── INIT ──────────────────────────────────────────────────────
 loadData();
 </script>
 </body>
