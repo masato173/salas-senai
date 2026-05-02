@@ -14,9 +14,8 @@
   [5] BAIXO    — Rate limit de cliques no botão refresh (debounce de 3s)
 -->
 
-<!-- [2] SEGURANÇA: headers de segurança via meta tags -->
-<meta http-equiv="X-Frame-Options" content="DENY">
-<meta http-equiv="X-Content-Type-Options" content="nosniff">
+<!-- SEGURANÇA: apenas referrer e CSP funcionam via meta no GitHub Pages.
+     X-Frame-Options e frame-ancestors precisam de HTTP header real — não se aplicam aqui. -->
 <meta name="referrer" content="no-referrer">
 <meta http-equiv="Content-Security-Policy"
   content="default-src 'self';
@@ -24,15 +23,7 @@
            style-src 'self' https://fonts.googleapis.com 'unsafe-inline';
            font-src https://fonts.gstatic.com;
            connect-src https://script.google.com https://script.googleusercontent.com;
-           img-src 'self' data:;
-           frame-ancestors 'none';">
-<!--
-  Nota sobre 'unsafe-inline' no script-src:
-  Necessário porque o JS está inline no HTML (sem build tool/bundler).
-  Para remover: mover todo o JS para um arquivo externo (app.js)
-  e adicionar hash ou nonce. Não é possível sem infraestrutura de build.
-  O restante da CSP (connect-src, frame-ancestors) já protege os vetores mais críticos.
--->
+           img-src 'self' data:;">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
