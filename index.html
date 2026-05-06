@@ -296,7 +296,7 @@ async function loadData() {
 
   } catch (e) {
     console.error('[SENAI] loadData erro:', e.name, e.message);
-    setStatus('error', 'Erro: ' + e.name + ' — ' + e.message);
+    setStatus('error', 'Erro ao carregar dados');
     var body = document.getElementById('tableBody');
     body.innerHTML = '';
     var div = document.createElement('div');
@@ -304,7 +304,7 @@ async function loadData() {
     div.innerHTML =
       '<div class="empty-icon">⚠</div>' +
       '<div class="empty-text">Falha ao carregar</div>' +
-      '<div class="empty-sub">DEBUG: ' + e.name + ': ' + e.message + '</div>';
+      '<div class="empty-sub">Tente atualizar a página ou contate o suporte.</div>';
     body.appendChild(div);
   } finally {
     document.getElementById('btnRefresh').classList.remove('spinning');
@@ -515,4 +515,5 @@ document.querySelectorAll('.turno-btn').forEach(function(btn) {
 loadData();
 </script>
 </body>
+</html>
 </html>
